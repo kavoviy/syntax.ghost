@@ -341,42 +341,57 @@
 
   @media (max-width: 600px) {
     .modal-inner {
-      width: 100vw;
-      height: 100dvh;
-      border-radius: 0;
+      width: 92vw;
+      height: auto;
+      max-height: 92vh;
+      border-radius: 16px;
       display: flex;
       flex-direction: column;
-      justify-content: center;
+      background: #000;
+      overflow: hidden;
     }
-    /* На мобильном modal-bg не absolute а часть flex-потока */
     .modal-bg {
       position: relative;
-      flex-shrink: 1;
-      min-height: 0;
+      width: 100%;
+      background: #000;
+      overflow: hidden;
+      flex-shrink: 0;
     }
+    .modal-bg::before { display: none; }
+    .modal-bg::after { display: none; }
     .modal-bg img {
-      object-fit: contain;
-      object-position: center top;
       width: 100%;
       height: auto;
-      max-height: 65dvh;
+      display: block;
+      object-fit: contain;
     }
-    /* Промпт прилипает снизу к фото */
     .modal-bottom {
       position: relative;
       flex-direction: row;
       align-items: flex-end;
-      padding: 12px 14px 28px;
+      padding: 12px 12px 16px;
       gap: 10px;
-      background: #000;
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(28px) saturate(180%);
+      -webkit-backdrop-filter: blur(28px) saturate(180%);
+      border-top: 1px solid rgba(255,255,255,0.1);
+      flex-shrink: 0;
     }
-    .modal-ref { width: 80px; flex-shrink: 0; }
-    .modal-ref img { aspect-ratio: 2/3; width: 80px; }
-    .modal-ref-label { font-size: 8px; text-align: center; }
-    .modal-prompt { padding: 12px 14px; }
+    .modal-ref { width: 64px; flex-shrink: 0; }
+    .modal-ref img { aspect-ratio: 2/3; width: 64px; }
+    .modal-ref-label { font-size: 7px; text-align: center; }
+    .modal-prompt {
+      padding: 10px 12px;
+      max-height: 120px;
+      background: transparent;
+      backdrop-filter: none;
+      -webkit-backdrop-filter: none;
+      border: none;
+      box-shadow: none;
+    }
     .modal-prompt-text { font-size: 10px; }
-    /* Градиент на мобильном не нужен — блок промпта не оверлей */
-    .modal-bg::after { display: none; }
+    .copy-btn { font-size: 9px; padding: 4px 8px; margin-top: 6px; }
+    .modal-close { position: absolute; top: 10px; right: 10px; z-index: 20; }
   }
 
   /* ── EMPTY STATE placeholder ── */
@@ -405,7 +420,11 @@
 <main class="gallery" id="gallery">
 
   <!-- ── CARD TEMPLATE – copy & fill in your own URLs / prompts ── -->
-
+  <div class="item"
+    data-generated="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&q=80"
+    data-reference="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&q=70"
+    data-prompt="Apply a glass tile refraction effect to the uploaded image. Keep the subject and colors unchanged. Overlay a subtle grid of uneven glass tiles that refract and distort the image in organic ways. Maintain photorealism, soft light scattering, and clean polished glass edges.">
+  </div>
   <div class="item"
     data-generated="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&q=80"
     data-reference="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&q=70"
@@ -523,6 +542,8 @@
     const prompt = item.dataset.prompt;
 
     modalMainImg.src = gen;
+    // blurred bg for mobile black bars
+    modalBg.style.setProperty('--img-url', `url('${gen}')`);
     modalPrompt.textContent = prompt;
     modalRef.src = ref;
     copyBtn.textContent = 'Copy prompt';
