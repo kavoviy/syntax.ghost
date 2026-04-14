@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AI Gallery</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --black: #000000;
+    --white: #ffffff;
+    --gray: #888;
+    --gray-light: #aaa;
+    --glass-bg: rgba(0,0,0,0.55);
+    --glass-blur: blur(18px);
+    --radius: 14px;
+    --transition: 0.35s cubic-bezier(0.4,0,0.2,1);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--black);
+    color: var(--white);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  body.modal-open { overflow: hidden; }
+
+  /* ── HEADER ── */
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 22px 40px;
+    background: rgba(0,0,0,0.75);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  @media (max-width: 720px) {
+    header { padding: 13px 16px; }
+  }
+
+  .logo {
+    font-size: 13px;
+    font-weight: 800;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--white);
+  }
+
+  .header-tag {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    color: var(--gray);
+    letter-spacing: 0.1em;
+  }
+
+  /* ── GALLERY GRID ── */
+  .gallery {
+    padding: 40px 28px 80px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+  }
+
+  @media (max-width: 1100px) { .gallery { grid-template-columns: repeat(3, 1fr); } }
+  @media (max-width: 720px)  { .gallery { grid-template-columns: repeat(2, 1fr); gap: 6px; padding: 12px 8px 60px; } }
+
+  .item {
+    position: relative;
+    aspect-ratio: 2/3;
+    overflow: hidden;
+    border-radius: 10px;
+    cursor: pointer;
+    background: #111;
+    flex-shrink: 0;
+  }
+
+  @media (max-width: 720px) {
+    .item { border-radius: 8px; aspect-ratio: 2/3; }
+  }
+
+  .item img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform var(--transition), filter var(--transition);
+    will-change: transform;
+  }
+
+  .item-overlay {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0);
+    transition: background var(--transition);
+    border-radius: 10px;
+  }
+
+  .item:hover img { transform: scale(1.05); filter: brightness(0.85); }
+  .item:hover .item-overlay { background: rgba(0,0,0,0.3); }
+
+  .item-label {
+    position: absolute;
+    bottom: 14px;
+    left: 14px;
+    right: 14px;
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    color: rgba(255,255,255,0);
+    line-height: 1.5;
+    transition: color var(--transition);
+    pointer-events: none;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  .item:hover .item-label { color: rgba(255,255,255,0.75); }
+
+  /* ── MODAL ── */
+  .modal {
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+
+  .modal.active {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .modal-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.6);
+    backdrop-filter: blur(2px);
+  }
+
+  .modal-inner {
+    position: relative;
+    height: min(92vh, 900px);
+    width: min(92vw, 560px);
+    border-radius: 20px;
+    overflow: hidden;
+    transform: scale(0.95);
+    transition: transform 0.35s cubic-bezier(0.34,1.56,0.64,1);
+    box-shadow: 0 40px 100px rgba(0,0,0,0.9);
+    background: #000;
+  }
+
+  .modal.active .modal-inner { transform: scale(1); }
+
+  /* Full bleed background image */
+  .modal-bg {
+    position: absolute;
+    inset: 0;
+    background: #000;
+  }
+
+  .modal-bg img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center top;
+    display: block;
+  }
+
+  @media (max-width: 600px) {
+    .modal-bg img {
+      object-fit: contain;
+      object-position: center top;
+    }
+  }
+
+  .modal-bg::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 55%;
+    background: linear-gradient(
+      to bottom,
+      rgba(0,0,0,0.0) 0%,
+      rgba(0,0,0,0.7) 70%,
+      rgba(0,0,0,0.9) 100%
+    );
+    pointer-events: none;
+  }
+
+  /* Close button */
+  .modal-close {
+    position: absolute;
+    top: 16px;
+    right: 16px;
+    z-index: 20;
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: none;
+    background: #000;
+    color: #fff;
+    font-size: 15px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s, transform 0.2s;
+    line-height: 1;
+  }
+
+  .modal-close:hover {
+    background: #222;
+    transform: scale(1.08);
+  }
+
+  /* Bottom content row — поверх фото */
+  .modal-bottom {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 10;
+    padding: 20px 20px 26px;
+    display: flex;
+    align-items: flex-end;
+    gap: 14px;
+  }
+
+  /* Prompt block — liquid glass */
+  .modal-prompt {
+    flex: 1;
+    background: rgba(255,255,255,0.06);
+    backdrop-filter: blur(28px) saturate(180%) brightness(1.1);
+    -webkit-backdrop-filter: blur(28px) saturate(180%) brightness(1.1);
+    border: 1px solid rgba(255,255,255,0.18);
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    border-right: 1px solid rgba(255,255,255,0.08);
+    border-radius: 18px;
+    padding: 12px 14px;
+    box-shadow:
+      inset 0 1px 0 rgba(255,255,255,0.2),
+      inset 0 -1px 0 rgba(0,0,0,0.1),
+      0 8px 32px rgba(0,0,0,0.25);
+    max-height: 130px;
+    display: flex;
+    flex-direction: column;
+  }
+
+  .modal-prompt-text {
+    font-family: 'Space Mono', monospace;
+    font-size: 11px;
+    line-height: 1.65;
+    color: rgba(255,255,255,0.82);
+    user-select: text;
+    cursor: text;
+    overflow-y: auto;
+    flex: 1;
+    min-height: 0;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255,255,255,0.2) transparent;
+  }
+
+  .modal-prompt-text::-webkit-scrollbar { width: 3px; }
+  .modal-prompt-text::-webkit-scrollbar-track { background: transparent; }
+  .modal-prompt-text::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 2px; }
+
+  .modal-prompt-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.45);
+    margin-bottom: 6px;
+    flex-shrink: 0;
+  }
+
+  .copy-btn {
+    margin-top: 8px;
+    flex-shrink: 0;
+    background: rgba(255,255,255,0.08);
+    border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 8px;
+    color: rgba(255,255,255,0.6);
+    font-family: 'Space Mono', monospace;
+    font-size: 10px;
+    padding: 5px 12px;
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    backdrop-filter: blur(8px);
+  }
+
+  .copy-btn:hover { background: rgba(255,255,255,0.16); color: #fff; }
+  .copy-btn.copied { color: #7fff7f; border-color: rgba(127,255,127,0.3); }
+
+  /* Reference thumbnail */
+  .modal-ref {
+    flex-shrink: 0;
+    width: 130px;
+  }
+
+  .modal-ref img {
+    width: 100%;
+    aspect-ratio: 3/4;
+    object-fit: cover;
+    border-radius: var(--radius);
+    border: 1.5px solid rgba(255,255,255,0.22);
+    box-shadow:
+      0 8px 32px rgba(0,0,0,0.4),
+      inset 0 1px 0 rgba(255,255,255,0.15);
+    display: block;
+  }
+
+  .modal-ref-label {
+    font-family: 'Space Mono', monospace;
+    font-size: 9px;
+    color: var(--gray);
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    text-align: center;
+    margin-top: 6px;
+  }
+
+  @media (max-width: 600px) {
+    .modal-inner {
+      width: 100vw;
+      height: 100dvh;
+      border-radius: 0;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    /* На мобильном modal-bg не absolute а часть flex-потока */
+    .modal-bg {
+      position: relative;
+      flex-shrink: 1;
+      min-height: 0;
+    }
+    .modal-bg img {
+      object-fit: contain;
+      object-position: center top;
+      width: 100%;
+      height: auto;
+      max-height: 65dvh;
+    }
+    /* Промпт прилипает снизу к фото */
+    .modal-bottom {
+      position: relative;
+      flex-direction: row;
+      align-items: flex-end;
+      padding: 12px 14px 28px;
+      gap: 10px;
+      background: #000;
+    }
+    .modal-ref { width: 80px; flex-shrink: 0; }
+    .modal-ref img { aspect-ratio: 2/3; width: 80px; }
+    .modal-ref-label { font-size: 8px; text-align: center; }
+    .modal-prompt { padding: 12px 14px; }
+    .modal-prompt-text { font-size: 10px; }
+    /* Градиент на мобильном не нужен — блок промпта не оверлей */
+    .modal-bg::after { display: none; }
+  }
+
+  /* ── EMPTY STATE placeholder ── */
+  .item[data-generated=""] img { display: none; }
+  .item[data-generated=""] { background: #0f0f0f; border: 1px dashed #222; }
+
+  /* animate in on load */
+  .item {
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+  }
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(16px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">syntax.ghost🍙</div>
+  <div class="header-tag">// image prompts</div>
+</header>
+
+<main class="gallery" id="gallery">
+
+  <!-- ── CARD TEMPLATE – copy & fill in your own URLs / prompts ── -->
+
+  <div class="item"
+    data-generated="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=800&q=80"
+    data-reference="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&q=70"
+    data-prompt="Apply a glass tile refraction effect to the uploaded image. Keep the subject and colors unchanged. Overlay a subtle grid of uneven glass tiles that refract and distort the image in organic ways. Maintain photorealism, soft light scattering, and clean polished glass edges.">
+  </div>
+
+  <div class="item"
+    data-generated="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&q=80"
+    data-reference="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=300&q=70"
+    data-prompt="Transform the photo into a liquid chrome aesthetic. The subject remains intact but their outline bleeds into rippling molten silver. Background dissolves into abstract mercury pools. Ultra-high specular highlights. Photorealistic.">
+  </div>
+
+  <div class="item"
+    data-generated="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&q=80"
+    data-reference="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=300&q=70"
+    data-prompt="Add a double-exposure effect blending the portrait with a dense forest scene. The trees appear softly within the skin tones. Keep eye detail sharp. Muted earthy palette with deep shadows. Film-quality grain.">
+  </div>
+
+  <div class="item"
+    data-generated="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80"
+    data-reference="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=70"
+    data-prompt="Render the subject as if photographed through frosted architectural glass. Edges bleed and bloom. Colors shift slightly cool. The silhouette is recognizable but the surface has a soft granular frost texture. Studio light source from the left.">
+  </div>
+
+  <div class="item"
+    data-generated="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=800&q=80"
+    data-reference="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=300&q=70"
+    data-prompt="Apply a neon noir retouch. Deep black shadows, vivid cyan and magenta rim lights on the subject. Wet street reflections in the background. High contrast cinematic grade. Blade Runner aesthetic, photorealistic.">
+  </div>
+
+  <div class="item"
+    data-generated="https://images.unsplash.com/photo-1521119989659-a83eee488004?w=800&q=80"
+    data-reference="https://images.unsplash.com/photo-1521119989659-a83eee488004?w=300&q=70"
+    data-prompt="Overlay a holographic iridescent film on the skin and clothing. Rainbow spectrum shifts at every angle. The face stays sharp. Background becomes a dark studio void. Ultra-glossy, fashion editorial lighting.">
+  </div>
+
+  <div class="item"
+    data-generated="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=800&q=80"
+    data-reference="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&q=70"
+    data-prompt="Create a shattered mirror composite. The image breaks into irregular mirror shards, each reflecting a slightly different angle or color temperature of the subject. Dark void between fragments. Dramatic editorial result.">
+  </div>
+
+  <div class="item"
+    data-generated="https://images.unsplash.com/photo-1617922001439-4a2e6562f328?w=800&q=80"
+    data-reference="https://images.unsplash.com/photo-1617922001439-4a2e6562f328?w=300&q=70"
+    data-prompt="Surround the portrait with blooming ink in water. Dark clouds of indigo and black ink diffuse outward from the edges. The face emerges clean from the center. Macro photography feel. Photorealistic fluid dynamics.">
+  </div>
+
+</main>
+
+<!-- ── MODAL ── -->
+<div class="modal" id="modal" role="dialog" aria-modal="true">
+  <div class="modal-backdrop" id="modal-backdrop"></div>
+  <div class="modal-inner">
+    <div class="modal-bg" id="modal-bg">
+      <img id="modal-main-img" src="" alt="">
+    </div>
+    <button class="modal-close" id="modal-close" aria-label="Close">✕</button>
+    <div class="modal-bottom">
+      <div class="modal-prompt">
+        <div class="modal-prompt-label">Prompt</div>
+        <div class="modal-prompt-text" id="modal-prompt-text"></div>
+        <button class="copy-btn" id="copy-btn">Copy prompt</button>
+      </div>
+      <div class="modal-ref">
+        <img id="modal-ref-img" src="" alt="Reference" loading="lazy">
+        <div class="modal-ref-label">Reference</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function() {
+  const gallery   = document.getElementById('gallery');
+  const modal     = document.getElementById('modal');
+  const modalBg   = document.getElementById('modal-bg');
+  const modalMainImg = document.getElementById('modal-main-img');
+  const modalPrompt = document.getElementById('modal-prompt-text');
+  const modalRef  = document.getElementById('modal-ref-img');
+  const closeBtn  = document.getElementById('modal-close');
+  const backdrop  = document.getElementById('modal-backdrop');
+  const copyBtn   = document.getElementById('copy-btn');
+
+  // Stagger animation on items
+  document.querySelectorAll('.item').forEach((el, i) => {
+    el.style.animationDelay = `${i * 0.06}s`;
+  });
+
+  // Build gallery cards
+  document.querySelectorAll('.item').forEach(item => {
+    const gen = item.dataset.generated;
+    if (!gen) return;
+    const img = document.createElement('img');
+    img.src = gen;
+    img.alt = '';
+    img.loading = 'lazy';
+    img.decoding = 'async';
+    item.appendChild(img);
+
+    const overlay = document.createElement('div');
+    overlay.className = 'item-overlay';
+    item.appendChild(overlay);
+
+    const label = document.createElement('div');
+    label.className = 'item-label';
+    label.textContent = item.dataset.prompt;
+    item.appendChild(label);
+  });
+
+  // Open modal
+  function openModal(item) {
+    const gen    = item.dataset.generated;
+    const ref    = item.dataset.reference;
+    const prompt = item.dataset.prompt;
+
+    modalMainImg.src = gen;
+    modalPrompt.textContent = prompt;
+    modalRef.src = ref;
+    copyBtn.textContent = 'Copy prompt';
+    copyBtn.classList.remove('copied');
+
+    modal.classList.add('active');
+    document.body.classList.add('modal-open');
+    closeBtn.focus();
+  }
+
+  function closeModal() {
+    modal.classList.remove('active');
+    document.body.classList.remove('modal-open');
+  }
+
+  gallery.addEventListener('click', e => {
+    const item = e.target.closest('.item');
+    if (item) openModal(item);
+  });
+
+  closeBtn.addEventListener('click', closeModal);
+  backdrop.addEventListener('click', closeModal);
+
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && modal.classList.contains('active')) closeModal();
+  });
+
+  copyBtn.addEventListener('click', () => {
+    const text = modalPrompt.textContent;
+    navigator.clipboard.writeText(text).then(() => {
+      copyBtn.textContent = 'Copied ✓';
+      copyBtn.classList.add('copied');
+      setTimeout(() => {
+        copyBtn.textContent = 'Copy prompt';
+        copyBtn.classList.remove('copied');
+      }, 2000);
+    });
+  });
+})();
+</script>
+</body>
+</html>
