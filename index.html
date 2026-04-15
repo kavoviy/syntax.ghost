@@ -183,13 +183,6 @@
     display: block;
   }
 
-  @media (max-width: 600px) {
-    .modal-bg img {
-      object-fit: contain;
-      object-position: center top;
-    }
-  }
-
   .modal-bg::after {
     content: '';
     position: absolute;
@@ -339,9 +332,14 @@
     margin-top: 6px;
   }
 
+  /* ========================================================
+     ОБНОВЛЕННЫЙ БЛОК ДЛЯ МОБИЛЬНЫХ ТЕЛЕФОНОВ
+     ======================================================== */
   @media (max-width: 600px) {
     .modal-inner {
-      width: 92vw;
+      width: fit-content; /* Подстраивается под контент (ширину фото) */
+      max-width: 87vw; /* Не вылезает за пределы 87vw экрана */
+      min-width: min(87vw, 280px); /* Не сжимается слишком сильно, чтобы не сломать UI */
       height: auto;
       max-height: 92vh;
       border-radius: 16px;
@@ -350,21 +348,30 @@
       background: #000;
       overflow: hidden;
     }
+    
     .modal-bg {
       position: relative;
-      width: 100%;
-      background: #000;
+      width: fit-content; /* Облегает фотографию */
+      max-width: 100%;
+      background: transparent;
       overflow: hidden;
       flex-shrink: 0;
+      display: flex;
+      justify-content: center;
+      margin: 0 auto; /* Центрирует фото, если оно уже min-width */
     }
+    
     .modal-bg::before { display: none; }
     .modal-bg::after { display: none; }
+    
     .modal-bg img {
-      width: 100%;
+      width: auto;
+      max-width: 87vw; /* Фотография никогда не станет шире 87vw */
       height: auto;
+      max-height: 60vh;
       display: block;
-      object-fit: contain;
     }
+    
     .modal-bottom {
       position: relative;
       flex-direction: row;
@@ -376,10 +383,18 @@
       -webkit-backdrop-filter: blur(28px) saturate(180%);
       border-top: 1px solid rgba(255,255,255,0.1);
       flex-shrink: 0;
+      /* ТРЮК: Обнуляем базовую ширину блока, чтобы длинный текст 
+         не распирал окно шире фотографии, а затем заставляем 
+         нижнюю панель занять ровно 100% ширины, которую задало фото */
+      width: 0;
+      min-width: 100%;
+      box-sizing: border-box;
     }
+    
     .modal-ref { width: 64px; flex-shrink: 0; }
     .modal-ref img { aspect-ratio: 2/3; width: 64px; }
     .modal-ref-label { font-size: 7px; text-align: center; }
+    
     .modal-prompt {
       padding: 10px 12px;
       max-height: 120px;
@@ -388,8 +403,16 @@
       -webkit-backdrop-filter: none;
       border: none;
       box-shadow: none;
+      width: 100%;
     }
-    .modal-prompt-text { font-size: 10px; }
+    
+    .modal-prompt-text { 
+      font-size: 10px; 
+      /* Защита от слишком длинных слов, если фото очень узкое */
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+    
     .copy-btn { font-size: 9px; padding: 4px 8px; margin-top: 6px; }
     .modal-close { position: absolute; top: 10px; right: 10px; z-index: 20; }
   }
@@ -419,7 +442,6 @@
 
 <main class="gallery" id="gallery">
 
-  <!-- ── CARD TEMPLATE – copy & fill in your own URLs / prompts ── -->
   <div class="item"
     data-generated="https://img4.teletype.in/files/f2/4a/f24a44ed-826d-4d0d-a1b7-65f90b4a939f.jpeg"
     data-reference="https://images2.imgbox.com/4a/6b/9mVuj7FL_o.jpg"
@@ -431,61 +453,12 @@
     data-prompt="A explosive celebration moment in a VIP section of the MGM Grand casino, Las Vegas, 4 AM. A group of three - two men and a woman - erupt in chaotic joy around a private roulette table. The man in the center, wearing an open white Gucci button-down revealing a tanned chest and layered gold chains, sprays a bottle of Dom Perignon into the air, champagne catching the light like liquid gold, droplets frozen mid-flight. The woman beside him - black Jacque-mus mini dress, messy blonde hair escaping a low bun throws a fistful of $100 bills upward, cash suspended in the air around her head like confetti. Her friend in a navy Brunello Cucinelli blazer bear-hugs her from behind, face buried in laughter against her shoulder. The roulette table is chaos - chips knocked over, some rolling off the edge, stacks toppled, the wheel still spinning. Empty champagne flutes lie on their sides. A bottle of Clase Azul tequila sits open, half-empty. The dealer standsback, hands raised, ex-pression somewhere between amusement and professional concern. The background is a fever dream of casino excess - crystal chandeliers casting prismatic light, velvet rope barriers, security guards in dark suits watching from the periphery, the endless blink of slot machines creating a galaxy of colored lights behind the glass VIP partition. Shot as a raw, handheld smartphone photo by someone at the table, clearly also drunk. The frame is tilted 15 degrees, slightly out of focus. Brutal direct flash freezes the champagne spray but blows out the white shirt completely. The flying cash is motion-blurred. Multiple lens flares from the chandeliers streak across the frame. Heavy visible grain, especially in the dark ceiling areas. Color fringing on the high-contrast edges. The image is pure chaos — no Al stylization, just authentic 4 AM casino energy captured in a messy, imperfect, utterly real moment.">
   </div>
   <div class="item"
-    data-generated="https://gemini.google.com/share/29b848ed5324"
-    data-reference="https://images2.imgbox.com/4a/6b/9mVuj7FL_o.jpg"
-    data-prompt="A explosive celebration moment in a VIP section of the MGM Grand casino, Las Vegas, 4 AM. A group of three - two men and a woman - erupt in chaotic joy around a private roulette table. The man in the center, wearing an open white Gucci button-down revealing a tanned chest and layered gold chains, sprays a bottle of Dom Perignon into the air, champagne catching the light like liquid gold, droplets frozen mid-flight. The woman beside him - black Jacque-mus mini dress, messy blonde hair escaping a low bun throws a fistful of $100 bills upward, cash suspended in the air around her head like confetti. Her friend in a navy Brunello Cucinelli blazer bear-hugs her from behind, face buried in laughter against her shoulder. The roulette table is chaos - chips knocked over, some rolling off the edge, stacks toppled, the wheel still spinning. Empty champagne flutes lie on their sides. A bottle of Clase Azul tequila sits open, half-empty. The dealer standsback, hands raised, ex-pression somewhere between amusement and professional concern. The background is a fever dream of casino excess - crystal chandeliers casting prismatic light, velvet rope barriers, security guards in dark suits watching from the periphery, the endless blink of slot machines creating a galaxy of colored lights behind the glass VIP partition. Shot as a raw, handheld smartphone photo by someone at the table, clearly also drunk. The frame is tilted 15 degrees, slightly out of focus. Brutal direct flash freezes the champagne spray but blows out the white shirt completely. The flying cash is motion-blurred. Multiple lens flares from the chandeliers streak across the frame. Heavy visible grain, especially in the dark ceiling areas. Color fringing on the high-contrast edges. The image is pure chaos — no Al stylization, just authentic 4 AM casino energy captured in a messy, imperfect, utterly real moment.">
-  </div>
-  <div class="item"
-    data-generated="https://gemini.google.com/share/29b848ed5324"
-    data-reference="https://images2.imgbox.com/4a/6b/9mVuj7FL_o.jpg"
-    data-prompt="Apply a glass tile refraction effect to the uploaded image. Keep the subject and colors unchanged. Overlay a subtle grid of uneven glass tiles that refract and distort the image in organic ways. Maintain photorealism, soft light scattering, and clean polished glass edges.">
-  </div>
-
-  <div class="item"
     data-generated="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&q=80"
     data-reference="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=300&q=70"
     data-prompt="Transform the photo into a liquid chrome aesthetic. The subject remains intact but their outline bleeds into rippling molten silver. Background dissolves into abstract mercury pools. Ultra-high specular highlights. Photorealistic.">
   </div>
-
-  <div class="item"
-    data-generated="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=800&q=80"
-    data-reference="https://images.unsplash.com/photo-1552374196-1ab2a1c593e8?w=300&q=70"
-    data-prompt="Add a double-exposure effect blending the portrait with a dense forest scene. The trees appear softly within the skin tones. Keep eye detail sharp. Muted earthy palette with deep shadows. Film-quality grain.">
-  </div>
-
-  <div class="item"
-    data-generated="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=800&q=80"
-    data-reference="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&q=70"
-    data-prompt="Render the subject as if photographed through frosted architectural glass. Edges bleed and bloom. Colors shift slightly cool. The silhouette is recognizable but the surface has a soft granular frost texture. Studio light source from the left.">
-  </div>
-
-  <div class="item"
-    data-generated="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=800&q=80"
-    data-reference="https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=300&q=70"
-    data-prompt="Apply a neon noir retouch. Deep black shadows, vivid cyan and magenta rim lights on the subject. Wet street reflections in the background. High contrast cinematic grade. Blade Runner aesthetic, photorealistic.">
-  </div>
-
-  <div class="item"
-    data-generated="https://images.unsplash.com/photo-1521119989659-a83eee488004?w=800&q=80"
-    data-reference="https://images.unsplash.com/photo-1521119989659-a83eee488004?w=300&q=70"
-    data-prompt="Overlay a holographic iridescent film on the skin and clothing. Rainbow spectrum shifts at every angle. The face stays sharp. Background becomes a dark studio void. Ultra-glossy, fashion editorial lighting.">
-  </div>
-
-  <div class="item"
-    data-generated="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=800&q=80"
-    data-reference="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&q=70"
-    data-prompt="Create a shattered mirror composite. The image breaks into irregular mirror shards, each reflecting a slightly different angle or color temperature of the subject. Dark void between fragments. Dramatic editorial result.">
-  </div>
-
-  <div class="item"
-    data-generated="https://images.unsplash.com/photo-1617922001439-4a2e6562f328?w=800&q=80"
-    data-reference="https://images.unsplash.com/photo-1617922001439-4a2e6562f328?w=300&q=70"
-    data-prompt="Surround the portrait with blooming ink in water. Dark clouds of indigo and black ink diffuse outward from the edges. The face emerges clean from the center. Macro photography feel. Photorealistic fluid dynamics.">
-  </div>
-
 </main>
 
-<!-- ── MODAL ── -->
 <div class="modal" id="modal" role="dialog" aria-modal="true">
   <div class="modal-backdrop" id="modal-backdrop"></div>
   <div class="modal-inner">
@@ -552,7 +525,6 @@
     const prompt = item.dataset.prompt;
 
     modalMainImg.src = gen;
-    // blurred bg for mobile black bars
     modalBg.style.setProperty('--img-url', `url('${gen}')`);
     modalPrompt.textContent = prompt;
     modalRef.src = ref;
